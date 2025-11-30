@@ -61,17 +61,7 @@ This dataset includes urban traffic flow data combined with weather observations
 │   ├── organizeData.py        # Organize and structure data
 │   ├── visualizeGribSpatial.py # Visualize spatial grid data
 │   ├── visualizeRainFallData.py # Visualize rainfall data
-│   └── TimeConverter.py       # UTC and local time conversion
-│
-├── analysis/                  # Analysis scripts
-│   ├── rainfall_analysis.py   # Select rainy and dry days
-│   ├── traffic_weather_analysis.py # Plot traffic flow on rainy and dry days
-│   ├── rain_traffic_comparison.py # Rainfall and traffic comparison
-│   ├── rainfall_timing_offset.py # 3-hour before/after rainfall analysis
-│   ├── rainfall_intensity_impact.py # Rainfall intensity impact on traffic
-│   └── rainfall_intensity_timing_impact.py # Final comprehensive analysis
-│   └── run_sensor_coverage_analysis.py # Calculate spatial coverage of roads
-│   └── sensitivity_analysis.py # Run sensitivity analysis for selected parameters.
+│   └── TimeConverter.py       # UTC and local time conversio
 │
 └── data/                      # Data directory (not included in repo)
     └── debug/
@@ -144,3 +134,20 @@ Issue reports and code contributions are welcome. Please ensure you follow the p
 ## License
 
 GNU General Public License v.3
+
+
+## 📌 Citation
+
+If you use this framework or dataset, please cite:
+```
+@article{Lin2025IUTF,
+  title        = {IUTF Dataset: Enabling Cross-Border Resource for Analysing the Impact of Rainfall on Urban Transportation},
+  author       = {Lin, Xuhui and Lu, Qiuchen and Chen, Long and Cheng, Jack Chin Pang and Yan, Jiayi and Hong, Jingke and Zhao, Pengjun},
+  journal      = {Scientific Data},
+  year         = {2025},
+  note         = {Data Descriptor},
+  doi          = {10.1038/s41597-025-06336-3},
+  url          = {https://doi.org/10.1038/s41597-025-06336-3}
+}
+```
+
