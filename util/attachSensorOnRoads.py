@@ -17,7 +17,7 @@ def convert_multilinestring(geometry):
 if __name__ == "__main__":
     # config = load_config(r'config.json')
     # cities = config['cities']
-    base_folder = r'data\debug\input'
+    base_folder = r'.\data\debug\input'
 
     for city in os.listdir(base_folder):
         print(f"Processing city: {city}")

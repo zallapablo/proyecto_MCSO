@@ -6,26 +6,26 @@ from pathlib import Path
 import json
 
 def load_download_progress(progress_file):
-    """加载下载进度"""
+    """Load download progress"""
     if os.path.exists(progress_file):
         with open(progress_file, 'r') as f:
             return json.load(f)
     return {'downloaded_dates': []}
 
 def save_download_progress(progress_file, downloaded_dates):
-    """保存下载进度"""
+    """Save download progress"""
     with open(progress_file, 'w') as f:
         json.dump({'downloaded_dates': downloaded_dates}, f)
 
 def download_era5_rainfall(date, output_dir):
     """
-    下载ERA5降水数据
-    date: 日期 (格式: YYYY-MM-DD)
-    output_dir: 输出目录
+    Download ERA5 rainfall data
+    date: Date (Format: YYYY-MM-DD)
+    output_dir: Output directory
     """
     output_file = f"{output_dir}/era5_rainfall_{date}.grib"
     if os.path.exists(output_file):
-        print(f"跳过已下载的日期: {date}")
+        print(f"Skipping already downloaded date: {date}")
         return output_file
     
     client = cdsapi.Client()
@@ -53,32 +53,32 @@ def download_era5_rainfall(date, output_dir):
         "download_format": "unarchived"
     }
     
-    print(f"开始下载 {date} 的数据...")
-    # 下载数据
+    print(f"Starting to download data for {date}...")
+    # Download data
     client.retrieve(
         "reanalysis-era5-single-levels",
         request,
         output_file
     )
-    print(f"完成下载 {date} 的数据")
+    print(f"Finished downloading data for {date}")
     return output_file
 
 def process_era5_data(): 
-    # 读取我们之前生成的日期文件
+    # Read the previously generated date file
     dates_df = pd.read_csv(r'data\debug\output\all_unique_dates.csv')
     
-    # 创建输出目录
+    # Create output directory
     output_dir = r"G:\002_Data\007_ERA5\000_weather"
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
-    # 进度文件路径
+    # Progress file path
     progress_file = os.path.join(output_dir, 'download_progress.json')
     
-    # 加载已下载的进度
+    # Load previously downloaded progress
     progress = load_download_progress(progress_file)
     downloaded_dates = set(progress['downloaded_dates'])
     
-    # 获取所有需要下载的日期
+    # Get all dates that need to be downloaded
     all_dates = pd.to_datetime(dates_df['date'])
     all_dates = all_dates.sort_values()
     
@@ -90,32 +90,32 @@ def process_era5_data():
             date_str = date.strftime('%Y-%m-%d')
             processed_count += 1
             
-            # 如果该日期已下载，跳过
+            # Skip if the date is already downloaded
             if date_str in downloaded_dates:
-                print(f"跳过已下载的日期: {date_str} ({processed_count}/{total_dates})")
+                print(f"Skipping already downloaded date: {date_str} ({processed_count}/{total_dates})")
                 continue
             
             try:
-                print(f"处理日期: {date_str} ({processed_count}/{total_dates})")
-                # 下载单天数据
+                print(f"Processing date: {date_str} ({processed_count}/{total_dates})")
+                # Download single day data
                 grib_file = download_era5_rainfall(date_str, output_dir)
                 
-                # 标记为已下载
+                # Mark as downloaded
                 downloaded_dates.add(date_str)
                 save_download_progress(progress_file, list(downloaded_dates))
                 
             except Exception as e:
-                print(f"下载 {date_str} 数据时发生错误: {str(e)}")
-                # 保存进度并继续下一个日期
+                print(f"Error occurred while downloading data for {date_str}: {str(e)}")
+                # Save progress and continue to the next date
                 save_download_progress(progress_file, list(downloaded_dates))
                 continue
         
-        print("所有ERA5数据下载完成！")
+        print("All ERA5 data download completed!")
         
     except Exception as e:
-        print(f"发生错误: {str(e)}")
-        print("已保存下载进度，下次运行时将从中断处继续")
-        # 确保在发生错误时也保存进度
+        print(f"Error occurred: {str(e)}")
+        print("Saved download progress, will resume from interruption next time")
+        # Ensure progress is saved even if an error occurs
         save_download_progress(progress_file, list(downloaded_dates))
 
 if __name__ == "__main__":

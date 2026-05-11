@@ -1,0 +1,14 @@
+dask
+pandas
+pyarrow
+osmnx
+geopandas
+shapely
+matplotlib
+selenium
+webdriver-manager 
+beautifulsoup4
+requests
+geopy
+cdsapi
+xarray
