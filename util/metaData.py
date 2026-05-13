@@ -8,18 +8,18 @@ import numpy as np
 from datetime import datetime
 
 def generate_city_metadata(city_folder):
-    """为指定城市生成元数据JSON文件"""
+    """Generate metadata JSON file for a specified city"""
     
     city_name = os.path.basename(city_folder)
     print(f"Generating metadata for {city_name}...")
     
-    # 定义输入文件路径
+    # Define input file paths
     network_geojson_path = os.path.join(city_folder, "selected_network_4326.geojson")
     rainfall_csv_path = os.path.join(city_folder, "rainfall_data.csv")
     detectors_csv_path = os.path.join(city_folder, "detectors_public.csv")
     readings_parquet_path = os.path.join(city_folder, "5min_readings.parquet")
     
-    # 检查必要文件是否存在
+    # Check if necessary files exist
     if not os.path.exists(network_geojson_path):
         print(f"Error: selected_network_4326.geojson not found for {city_name}")
         return None
@@ -53,7 +53,7 @@ def generate_city_metadata(city_folder):
         }
     }
     
-    # 从network geojson获取空间范围和道路数量
+    # Get spatial bounds and road count from network geojson
     try:
         network_gdf = gpd.read_file(network_geojson_path)
         bounds = network_gdf.total_bounds  # [minx, miny, maxx, maxy]
@@ -64,11 +64,11 @@ def generate_city_metadata(city_folder):
         print(f"Error processing network geojson: {str(e)}")
         return None
     
-    # 从rainfall_data.csv获取时间范围
+    # Get time range from rainfall_data.csv
     try:
         rainfall_df = pd.read_csv(rainfall_csv_path)
         if 'date' in rainfall_df.columns:
-            # 确保日期格式一致
+            # Ensure consistent date format
             rainfall_df['date'] = pd.to_datetime(rainfall_df['date'])
             start_date = rainfall_df['date'].min().strftime('%Y-%m-%d')
             end_date = rainfall_df['date'].max().strftime('%Y-%m-%d')
@@ -81,7 +81,7 @@ def generate_city_metadata(city_folder):
         print(f"Error processing rainfall data: {str(e)}")
         return None
     
-    # 从detectors_public.csv获取传感器数量
+    # Get sensor count from detectors_public.csv
     if os.path.exists(detectors_csv_path):
         try:
             detectors_df = pd.read_csv(detectors_csv_path)
@@ -92,13 +92,13 @@ def generate_city_metadata(city_folder):
     else:
         print(f"Warning: detectors_public.csv not found for {city_name}")
     
-    # 从5min_readings.parquet获取时间点数量
+    # Get timepoint count from 5min_readings.parquet
     if os.path.exists(readings_parquet_path):
         try:
-            # 直接尝试读取整个文件，不使用nrows参数
+            # Try reading the entire file directly without nrows param
             readings_df = pd.read_parquet(readings_parquet_path)
             
-            # 尝试找到时间列（可能是'datetime'或其他名称）
+            # Try to find time column (might be 'datetime' or other names)
             time_column = None
             for potential_col in ['datetime', 'timestamp', 'time', 'date']:
                 if potential_col in readings_df.columns:
@@ -116,7 +116,7 @@ def generate_city_metadata(city_folder):
     else:
         print(f"Warning: 5min_readings.parquet not found for {city_name}")
     
-    # 保存元数据到JSON文件
+    # Save metadata to JSON file
     metadata_path = os.path.join(city_folder, f"{city_name}_metadata.json")
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
@@ -125,15 +125,15 @@ def generate_city_metadata(city_folder):
     return metadata
 
 def main():
-    # 根目录
+    # Root directory
     data_root = r"data\debug\input"
     
-    # 获取所有城市文件夹
+    # Get all city folders
     city_folders = [d for d in glob.glob(os.path.join(data_root, "*")) if os.path.isdir(d)]
     
     print(f"Found {len(city_folders)} city folders")
     
-    # 处理每个城市
+    # Process each city
     for city_folder in city_folders:
         generate_city_metadata(city_folder)
     

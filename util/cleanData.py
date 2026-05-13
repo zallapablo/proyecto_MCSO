@@ -4,109 +4,109 @@ from pathlib import Path
 
 def clean_era5_city_folders(base_dir="data/processed/era5_city", dry_run=True):
     """
-    清理era5_city文件夹，只保留每个城市的grid_info.parquet文件
+    Clean era5_city folders, keeping only the grid_info.parquet file for each city
     
-    参数:
-    base_dir: 基础目录路径
-    dry_run: 如果为True，只显示会删除什么，但不实际删除
+    Parameters:
+    base_dir: base directory path
+    dry_run: if True, just shows what would be deleted, but does not actually delete
     """
     base_path = Path(base_dir)
     
-    # 确保基础目录存在
+    # Ensure base directory exists
     if not base_path.exists():
-        print(f"错误: 目录 {base_dir} 不存在")
+        print(f"Error: Directory {base_dir} does not exist")
         return
     
-    # 获取所有城市文件夹
+    # Get all city folders
     city_folders = [f for f in base_path.iterdir() if f.is_dir()]
     
     if not city_folders:
-        print(f"没有找到城市文件夹在 {base_dir}")
+        print(f"No city folders found in {base_dir}")
         return
     
-    print(f"找到 {len(city_folders)} 个城市文件夹")
+    print(f"Found {len(city_folders)} city folders")
     
-    # 跟踪删除统计
+    # Track deletion statistics
     deleted_files = 0
     deleted_folders = 0
     preserved_files = 0
     
-    # 遍历每个城市文件夹
+    # Iterate through each city folder
     for city_folder in city_folders:
         city_name = city_folder.name
-        print(f"\n处理城市: {city_name}")
+        print(f"\nProcessing city: {city_name}")
         
-        # 要保留的文件路径
+        # File path to keep
         grid_info_path = city_folder / "weather" / "grid_info.parquet"
         
-        # 检查grid_info.parquet是否存在
+        # Check if grid_info.parquet exists
         grid_info_exists = grid_info_path.exists()
         if grid_info_exists:
             preserved_files += 1
-            print(f"  保留文件: {grid_info_path}")
+            print(f"  Keeping file: {grid_info_path}")
         else:
-            print(f"  警告: {grid_info_path} 不存在")
+            print(f"  Warning: {grid_info_path} does not exist")
         
-        # 遍历城市文件夹中的所有文件和目录
-        for root, dirs, files in os.walk(city_folder, topdown=False):  # topdown=False 确保先处理子目录
+        # Iterate through all files and directories in the city folder
+        for root, dirs, files in os.walk(city_folder, topdown=False):  # topdown=False ensures subdirectories are processed first
             root_path = Path(root)
             
-            # 处理文件
+            # Process files
             for file in files:
                 file_path = root_path / file
                 
-                # 如果不是要保留的文件，则删除
+                # Delete if it is not the file to keep
                 if file_path != grid_info_path:
                     if dry_run:
-                        print(f"  将删除文件: {file_path}")
+                        print(f"  Will delete file: {file_path}")
                     else:
                         try:
                             file_path.unlink()
-                            print(f"  已删除文件: {file_path}")
+                            print(f"  Deleted file: {file_path}")
                             deleted_files += 1
                         except Exception as e:
-                            print(f"  删除文件时出错 {file_path}: {str(e)}")
+                            print(f"  Error deleting file {file_path}: {str(e)}")
             
-            # 处理目录
-            # 不删除weather目录和城市目录本身
+            # Process directories
+            # Do not delete weather directory and the city directory itself
             if (root_path != city_folder and 
                 root_path != city_folder / "weather" and
                 (not grid_info_exists or "weather" not in root_path.parts)):
                 
-                # 检查目录是否为空
+                # Check if directory is empty
                 if not any(root_path.iterdir()) or not grid_info_exists:
                     if dry_run:
-                        print(f"  将删除目录: {root_path}")
+                        print(f"  Will delete directory: {root_path}")
                     else:
                         try:
-                            # 使用rmdir只能删除空目录
+                            # Use rmdir to only delete empty directories
                             root_path.rmdir()
-                            print(f"  已删除目录: {root_path}")
+                            print(f"  Deleted directory: {root_path}")
                             deleted_folders += 1
                         except Exception as e:
-                            print(f"  删除目录时出错 {root_path}: {str(e)}")
+                            print(f"  Error deleting directory {root_path}: {str(e)}")
         
-        # 确保weather目录存在
+        # Ensure weather directory exists
         weather_dir = city_folder / "weather"
         if not weather_dir.exists() and not dry_run:
             weather_dir.mkdir(parents=True, exist_ok=True)
-            print(f"  创建目录: {weather_dir}")
+            print(f"  Created directory: {weather_dir}")
     
-    # 打印统计信息
-    print("\n清理完成!")
-    print(f"预计会删除 {deleted_files} 个文件和 {deleted_folders} 个目录" if dry_run 
-          else f"已删除 {deleted_files} 个文件和 {deleted_folders} 个目录")
-    print(f"保留了 {preserved_files} 个grid_info.parquet文件")
+    # Print statistics
+    print("\nCleanup complete!")
+    print(f"Estimated to delete {deleted_files} files and {deleted_folders} directories" if dry_run 
+          else f"Deleted {deleted_files} files and {deleted_folders} directories")
+    print(f"Preserved {preserved_files} grid_info.parquet files")
 
 if __name__ == "__main__":
-    # 先执行一次dry run，显示将要删除的内容
-    print("=== 执行预览模式(不会实际删除文件) ===")
+    # First do a dry run to show what will be deleted
+    print("=== Execution preview mode (will not actually delete files) ===")
     clean_era5_city_folders(dry_run=True)
     
-    # 询问用户是否继续
-    response = input("\n确认删除这些文件? (yes/no): ").strip().lower()
+    # Ask user to confirm
+    response = input("\nConfirm deletion of these files? (yes/no): ").strip().lower()
     if response == 'yes':
-        print("\n=== 执行实际删除 ===")
+        print("\n=== Executing actual deletion ===")
         clean_era5_city_folders(dry_run=False)
     else:
-        print("操作已取消，没有文件被删除。")
+        print("Operation cancelled, no files were deleted.")

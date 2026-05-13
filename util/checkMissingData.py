@@ -31,83 +31,83 @@ class DataCompleteness:
         self.time_converter = TimeConverter()
 
     def analyze_city_data(self, city_name, era5_root, processed_dir):
-        """分析单个城市的数据完整性"""
+        """Analyze data completeness for a single city"""
         city_timezone = self.timezone_mapping.get(city_name.lower(), 'UTC')
         print(f"\nAnalyzing city {city_name} (Timezone: {city_timezone})")
         
-        # 读取已处理的数据
+        # Read processed data
         processed_path = Path(processed_dir) / city_name / 'weather'
         if not processed_path.exists():
             print(f"Cannot find processed data directory: {processed_path}")
             return
         
-        # 获取所有已处理的日期
+        # Get all processed dates
         processed_files = list(processed_path.glob('hourly_rainfall_*.parquet'))
         processed_dates = [pd.to_datetime(f.stem.split('_')[-1]).date() for f in processed_files]
         
-        # 分析每个日期
+        # Analyze each date
         for date in processed_dates:
             print(f"\nChecking date: {date}")
             
-            # 读取当前日期的数据
+            # Read data for current date
             df = pd.read_parquet(processed_path / f'hourly_rainfall_{date}.parquet')
             
-            # 使用TimeConverter进行时间转换和检查
+            # Use TimeConverter for time conversion and checking
             utc_start = pd.Timestamp(f"{date} 00:00")
             utc_end = pd.Timestamp(f"{date} 23:00")
             
-            # 转换为本地时间并检查夏令时
+            # Convert to local time and check daylight saving time
             start_result = self.time_converter.utc_to_local(utc_start, city_timezone)
             end_result = self.time_converter.utc_to_local(utc_end, city_timezone)
             
-            # 显示夏令时信息
+            # Show daylight saving time information
             if start_result['dst_transition']:
                 print(f"Special case: {start_result['dst_transition']}")
                 print(f"Local time range: {start_result['local_time']} to {end_result['local_time']}")
             
-            # 获取预期的本地时间范围
+            # Get expected local time range
             local_hours = pd.date_range(
                 start=start_result['local_time'],
                 end=end_result['local_time'],
                 freq='h'
             )
             
-            # 获取实际的小时
+            # Get actual hours
             actual_hours = pd.to_datetime(df['datetime'].unique())
             
-            # 检查缺失的小时
+            # Check for missing hours
             missing_hours = set(local_hours) - set(actual_hours)
             if missing_hours:
                 print("\nMissing hours:")
                 for missing_hour in sorted(missing_hours):
-                    # 转换回UTC时间来确定需要的GRIB文件
+                    # Convert back to UTC time to determine required GRIB files
                     utc_result = self.time_converter.local_to_utc(missing_hour, city_timezone)
                     print(f"Local time: {missing_hour}, UTC time: {utc_result['utc_time']}")
                     
-                    # 检查是否需要额外的GRIB文件
+                    # Check if additional GRIB files are needed
                     grib_date = utc_result['utc_time'].date()
                     grib_file = Path(era5_root) / f"era5_rainfall_{grib_date}.grib"
                     if not grib_file.exists():
                         print(f"Required GRIB file: era5_rainfall_{grib_date}.grib")
             
-            # 分析数据分布
+            # Analyze data distribution
             print(f"Data time range: {min(actual_hours)} to {max(actual_hours)}")
             print(f"Number of data points: {len(actual_hours)}")
             
-            # 检查是否有异常值
+            # Check for outliers or anomalies
             grid_counts = df.groupby('datetime').size()
             if grid_counts.nunique() > 1:
                 print("Warning: Inconsistent number of grid points across timestamps")
                 print(grid_counts.value_counts())
 
     def analyze_all_cities(self, era5_root="G:/002_Data/007_ERA5", processed_dir="data/processed/era5_city"):
-        """分析所有城市的数据完整性"""
+        """Analyze data completeness for all cities"""
         processed_dir = Path(processed_dir)
         cities = [d.name for d in processed_dir.iterdir() if d.is_dir()]
         
         print(f"Found {len(cities)} cities")
         
-        # 创建报告
+        # Create report
         report = {
             'analysis_time': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
             'cities': {}
@@ -129,7 +129,7 @@ class DataCompleteness:
                 print(f"Error analyzing city {city}: {str(e)}")
                 report['cities'][city] = {'error': str(e)}
         
-        # 保存报告
+        # Save report
         with open(processed_dir / 'data_completeness_report.json', 'w') as f:
             json.dump(report, f, indent=2, default=str)
 

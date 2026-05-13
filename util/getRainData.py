@@ -93,4 +93,4 @@ if __name__ == '__main__':
         updated_df = existing_df.append(result, ignore_index=True)
         updated_df.to_csv(output_file, index=False)
         
-        print(f"!!!!!!!!!!!!!!!!!!{city} {date} 降雨量: {rainfall}!!!!!!!!!!!!!!!!!!!")
+        print(f"!!!!!!!!!!!!!!!!!!{city} {date} Rainfall: {rainfall}!!!!!!!!!!!!!!!!!!!")
