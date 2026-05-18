@@ -3,11 +3,13 @@ cdsapi
 dask
 geopandas
 geopy
+ipykernel
 matplotlib
 osmnx
 pandas
 pyarrow
 requests
+scipy
 seaborn
 selenium
 shapely
