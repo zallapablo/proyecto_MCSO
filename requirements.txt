@@ -13,5 +13,6 @@ scipy
 seaborn
 selenium
 shapely
+scikit-learn
 webdriver-manager 
 xarray
